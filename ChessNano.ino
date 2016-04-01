@@ -39,6 +39,7 @@ File myFile;
 const byte ROWS = 8; 
 const byte COLS = 8;
 //define the cymbols on the buttons of the keypads
+
 char hexaKeys[ROWS][COLS] = {
   {'1','2','3','4','5','6','7','8'},
   {'a','b','c','d','e','f','g','h'},
@@ -51,8 +52,19 @@ char hexaKeys[ROWS][COLS] = {
 };
 
 
-byte rowPins[ROWS] ={36,37,34,35,32,33,30,31} ; //connect to the row pinouts of the keypad
-byte colPins[COLS] ={39,38,41,40,43,42,45,44}; //connect to the column pinouts of the keypad
+/*
+char hexaKeys[ROWS][COLS] = {
+  {'1','2','3'},
+  {'a','b','c'},
+  {'A','B','C'}
+};
+*/
+
+byte rowPins[ROWS] ={2,3,4,5,6,7,8,9}; //,6,5,4,3,2}; //connect to the row pinouts of the keypad
+byte colPins[COLS] ={10,11,12,14,15,16,17,18}; //,13,0,1,2,3} ; //connect to the column pinouts of the keypad
+
+//byte rowPins[ROWS] ={36,37,34,35,32,33,30,31} ; //connect to the row pinouts of the keypad
+//byte colPins[COLS] ={39,38,41,40,43,42,45,44}; //connect to the column pinouts of the keypad
 
 
 byte LastbitMap[8]={195,195,195,195,195,195,195,195};
@@ -198,16 +210,16 @@ String permut() {
   strPos="";
 
   if (touche==haut) { 
-      for(int i=0;i<8;i++) {
+      for(int i=0;i<ROWS;i++) {
         strPos = strPos+ ChessBoard.bitMap[i];
         strPos = strPos+ ".";
         NewbitMap[i]=ChessBoard.bitMap[i];
       }       
     } else if (touche==droite) {
       
-      for(int i=7;i>=0;i--)
+      for(int i=ROWS-1;i>=0;i--)
       {
-        for (int b=7;b>=0;b--)
+        for (int b=ROWS-1;b>=0;b--)
         {
           bitWrite( TempoBitMap, b, bitRead(ChessBoard.bitMap[b],i) ); 
         } 
@@ -218,11 +230,11 @@ String permut() {
 
     } else if (touche==gauche) {
 
-      for(int i=0;i<8;i++)
+      for(int i=0;i<ROWS;i++)
       {
-        for (int b=0;b<8;b++)
+        for (int b=0;b<ROWS;b++)
         {
-          bitWrite( TempoBitMap, 7-b, bitRead(ChessBoard.bitMap[b],i) );   
+          bitWrite( TempoBitMap, ROWS-1-b, bitRead(ChessBoard.bitMap[b],i) );   
         }
         strPos = strPos+ TempoBitMap;
         strPos = strPos + ".";
@@ -230,15 +242,15 @@ String permut() {
       }
 
     } else if (touche==bas) { 
-      for(int i=7;i>=0;i--)
+      for(int i=ROWS-1;i>=0;i--)
       {
-        for (int b=7;b>=0;b--)
+        for (int b=ROWS-1;b>=0;b--)
         {
-          bitWrite( TempoBitMap, 7-b, bitRead(ChessBoard.bitMap[i],b) );       
+          bitWrite( TempoBitMap, ROWS-1-b, bitRead(ChessBoard.bitMap[i],b) );       
         }
         strPos = strPos+ TempoBitMap;
         strPos = strPos + ".";
-        NewbitMap[7-i]=TempoBitMap;
+        NewbitMap[ROWS-1-i]=TempoBitMap;
       }      
     }    
 
@@ -267,6 +279,7 @@ void setup()
 //----------------------------------------------------------
 //initialisation su port serie
     Serial.begin(57600);
+   
 //----------------------------------------------------------
 /*
   //initialisation de l'ecran LCD
@@ -372,6 +385,9 @@ void setup()
   lcd.print(". . .         ");
  */ 
  touche=bas;
+ ChessBoard.getKeys();
+ permut();
+ Serial.println(strPos);
 }
 
 //******************************************************************************************
