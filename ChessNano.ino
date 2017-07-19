@@ -1,157 +1,88 @@
+//numéro des pins de l'arduino pour les lignes et les colonnes
+byte const rowPins[8] = {2,3,4,5,6,7,8,9}; //INPUT
+byte const colPins[8] = {10,11,12,14,15,16,17,13}; //OUTPUT
 
+//état du plateau contenant les 8 bytes
+byte BitMap[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-int keyPress;
-
-byte touche = 0;
-
-const byte droite=3;
-const byte gauche=1;
-const byte haut=5;
-const byte bas=2;
-const byte entree=4;
-const byte aucune=0;
-
-
-//-----------------------------------------------------------
-// GESTION DU Pseudo CLAVIER 8x8
-//-----------------------------------------------------------
-
-#include "utility/Key.h"
-#include "Keypad.h"
-
-const byte ROWS = 8; 
-const byte COLS = 8;
-//define the cymbols on the buttons of the keypads
-
-char hexaKeys[ROWS][COLS] = {
-  {'1','2','3','4','5','6','7','8'},
-  {'a','b','c','d','e','f','g','h'},
-  {'A','B','C','D','E','F','G','H'},
-  {'&','é','#','{','(','-','è','_'},
-  {'i','j','k','l','m','n','o','p'},
-  {'I','J','K','L','M','N','O','P'},
-  {'q','r','s','t','u','v','w','x'},
-  {'Q','R','S','T','U','V','W','X'}
-};
-
-
-byte rowPins[ROWS] ={2,3,4,5,6,7,8,9}; //,6,5,4,3,2}; //connect to the row pinouts of the keypad
-byte colPins[COLS] ={10,11,12,14,15,16,17,18}; //,13,0,1,2,3} ; //connect to the column pinouts of the keypad
-
-
-byte NewbitMap[8]={195,195,195,195,195,195,195,195};
-
-//initialize an instance of class NewKeypad
-Keypad ChessBoard = Keypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS); 
-
-
-
+//temps du début du dernier scan
 unsigned long startTime;
 
-// la position 
-String strPos ="195.195.195.195.195.195.195.195.time";
-// Nombre de positon dans l'enregistrement
-int nbPos=0;
+//signature sous forme de string a transmetre via USB
+String strPos = "0.0.0.0.0.0.0.0.";
 
+//temps minimum avant rescan de l'échiquier
+byte const debounceTime =10;
 
+//*********************************************************
+// SCAN LE CLAVIER
+//*********************************************************
+bool getKeys() 
+{
+	bool keyActivity = false;
+	//strPos = "";
 
-
+	if ( (millis()-startTime)>debounceTime ) //si le dernier scan n'est pas trop récent
+	{							
+		// RE INITIALISE LES PORTS A CHAQUE FOIS 
+		// CELA PERMET DE LES UTILISER AVEC UN AUTRE MATERIEL
+		for (byte r=0; r<8; r++) { pinMode(rowPins[r],INPUT_PULLUP); }				
+		for (byte c=0; c<8; c++) 
+		{
+			pinMode(colPins[c],OUTPUT);
+			digitalWrite(colPins[c], LOW);	// Begin column pulse output.
+			for (byte r=0; r<8; r++) 
+			{
+				if (!digitalRead(rowPins[r])!=bitRead(BitMap[7-c],7-r)) { keyActivity=true; } 			
+				bitWrite(BitMap[7-c], 7-r, !digitalRead(rowPins[r]));  // ECRIS L ETAT DU BOUTON EN INVERSANT CAR 0 = APPUYE
+			}	
+			//strPos = strPos + BitMap[c];
+    		//strPos = strPos + ".";  		
+			// Set pin to high impedance input. Effectively ends column pulse.
+			// REMET LE PORT EN ETAT POUR LA PROCHAINE LECTURE
+			digitalWrite(colPins[c],HIGH);
+			pinMode(colPins[c],INPUT);
+		}
+		
+	}	
+	return keyActivity;
+}
 //-----------------------------------------------------------
-// effectue les permutations de bits pour renvoyer toujours 195. ...
-// facultatif si on place cela directement sur le prog PC
-String permut() {
-
-  byte TempoBitMap=0;
-  strPos="";
-
-  if (touche==haut) { 
-      for(int i=0;i<ROWS;i++) {
-        strPos = strPos+ ChessBoard.bitMap[i];
-        strPos = strPos+ ".";
-        NewbitMap[i]=ChessBoard.bitMap[i];
-      }       
-    } else if (touche==droite) {
-      
-      for(int i=ROWS-1;i>=0;i--)
-      {
-        for (int b=ROWS-1;b>=0;b--)
-        {
-          bitWrite( TempoBitMap, b, bitRead(ChessBoard.bitMap[b],i) ); 
-        } 
-        strPos = strPos+ TempoBitMap;
-        strPos = strPos + ".";
-        NewbitMap[ROWS-1-i]=TempoBitMap; 
-      }
-
-    } else if (touche==gauche) {
-
-      for(int i=0;i<ROWS;i++)
-      {
-        for (int b=0;b<ROWS;b++)
-        {
-          bitWrite( TempoBitMap, ROWS-1-b, bitRead(ChessBoard.bitMap[b],i) );   
-        }
-        strPos = strPos+ TempoBitMap;
-        strPos = strPos + ".";
-        NewbitMap[i]=TempoBitMap;
-      }
-
-    } else if (touche==bas) { 
-      for(int i=ROWS-1;i>=0;i--)
-      {
-        for (int b=ROWS-1;b>=0;b--)
-        {
-          bitWrite( TempoBitMap, ROWS-1-b, bitRead(ChessBoard.bitMap[i],b) );       
-        }
-        strPos = strPos+ TempoBitMap;
-        strPos = strPos + ".";
-        NewbitMap[ROWS-1-i]=TempoBitMap;
-      }      
-    }    
-
-
-    return strPos;
-    
+// effectue les permutations de bits pour renvoyer les bonnes signatures plateau
+//-----------------------------------------------------------
+void PermuToBOARD() {
+  //byte TempoBitMap = 0;
+  strPos = "";
+	for (int i=0; i<8; i++)
+  	{
+  		strPos = strPos + BitMap[i];
+    	strPos = strPos + ".";  
+  	}
 }
 
 //******************************************************************************************
 //                          SETUP
 //******************************************************************************************
-
 void setup()
 {
-//----------------------------------------------------------
-//initialisation su port serie
-    Serial.begin(57600);
-   
-//----------------------------------------------------------
-
-    ChessBoard.setDebounceTime(10);
-    ChessBoard.setHoldTime(2000);    
-
-
- touche=bas;
-
+  //initialisation du port serie
+  Serial.begin(57600);   
+  getKeys();
+  startTime = millis();  
 }
 
 //******************************************************************************************
 //                          LOOP
 //******************************************************************************************
-  
-void loop(){
 
- // ChessBoard.getKeys() renvoie true en cas de changement de l'état du clavier
- if ( ChessBoard.getKeys() ) {
-    
-    //calcul la chaine de la position
-    permut();
-
-    //affiche les infos sur le port serie
-    Serial.println( millis()-startTime );   //temps de stabilité de la position
-    Serial.println(strPos);                 //la position 195. ...
-
-   //initialise le compteur pour mesurer le temps
-    startTime = millis(); 
+void loop() {
+ 
+  if ( getKeys() )
+  {
+    PermuToBOARD(); 
+    Serial.println( millis() - startTime ); 
+    Serial.println(strPos);
+    startTime = millis();		//stock l'heure de fin du scan
   }
 }
 

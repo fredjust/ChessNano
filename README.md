@@ -1,9 +1,12 @@
 # ChessNano
 ChessboARDuino with nano card  
 
-il est necessaire de remplace le fichier keypad.cpp de la library Keypad par celui ci  
+simple programme permettant de renvoyer via le port USB les signatures du plateau  
 
-en projet : intégrer le code nécessaire dans le code prinicpal 
+la pin 0 ne peut etre utilisée pour le clavier elle génère la réception de caractère aléatoire  
+la pin 1 TX ne fonctionne pas  
+les pin 20 et 21 ne fonctionnent pas directement  
+la pin 13 fonctionne en entrée avec une résistance de 10K en pull up  
 
-ATTENTION les PIN 01 13 20 21 ne fonctionnent pas
+
 
