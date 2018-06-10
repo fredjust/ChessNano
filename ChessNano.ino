@@ -1,6 +1,10 @@
 //numéro des pins de l'arduino pour les lignes et les colonnes
-byte const rowPins[8] = {2,3,4,5,6,7,8,9}; //INPUT
-byte const colPins[8] = {10,11,12,14,15,16,17,18}; //OUTPUT
+
+//byte const rowPins[8] = {2,3,4,5,6,7,8,9}; //INPUT
+//byte const colPins[8] = {10,11,12,14,15,16,17,18}; //OUTPUT
+
+byte rowPins[8] = {12, 11, 10, 9, 8, 7, 6, 13}; //connect to the row pinouts of the keypad
+byte colPins[8] = {14, 15, 16, 17, 4, 3, 2, 5}; 
 
 //état du plateau contenant les 8 bytes
 byte BitMap[8] = {0, 0, 0, 0, 0, 0, 0, 0};
